@@ -1,0 +1,83 @@
+import requests
+import urllib
+import re
+import tabula
+import pandas as pd
+from datetime import timedelta
+from datetime import datetime
+
+
+# In[2]:
+
+
+pdf_url = "http://www.ico.org/prices/pr-prices.pdf"
+
+urllib.request.urlretrieve(pdf_url, 'download.pdf')
+  
+r = requests.get(pdf_url) 
+with open("ico_price.pdf",'wb') as f: 
+    f.write(r.content)
+
+
+# In[3]:
+
+
+file_path = "./ico_price.pdf"
+df = tabula.read_pdf(file_path, multiple_tables = False)
+
+
+# In[4]:
+
+
+tabula.convert_into(file_path, 'ico_price.csv', output_format = "csv")
+
+
+# In[5]:
+
+
+df1 = pd.read_csv("ico_price.csv")
+
+
+# In[6]:
+
+
+df1.rename(columns={'Unnamed: 0': 'date', 'Unnamed: 1': 'ico_composite', 'US cents/lb': 'colombian_milds', 'Unnamed: 3': 'other_milds', 'Unnamed: 4': 'brazilian_naturals', 'Unnamed: 5': 'robustas'}, inplace = True)
+
+df1.dropna(inplace = True)
+
+df1.date.dtype
+
+df1['date'] = df1['date'].astype(str) + "-2020"
+
+
+# In[7]:
+
+
+df1['date'] = pd.to_datetime(df1['date'], format = '%d-%b-%Y')
+df1['date'] = df1['date'].dt.strftime('%B %d')
+
+
+# In[8]:
+
+
+rslt_df = df1.tail(1)
+
+
+# In[9]:
+
+
+yesterday_ico_price = rslt_df['ico_composite']
+mrpstr = rslt_df['ico_composite'].to_string(index=False, header=False)
+mrdstr = rslt_df['date'].to_string(index=False, header=False)
+
+
+# In[10]:
+
+
+most_recent_price_str = (f'The Most Recent @ICOCoffeeOrg Indicator Price was{mrpstr} cents on{mrdstr}.')
+
+
+# In[11]:
+
+
+most_recent_price_str
